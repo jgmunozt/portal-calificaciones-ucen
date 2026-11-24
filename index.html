@@ -286,7 +286,42 @@ elemento("salir").addEventListener("click", async function() {
     }
 
 });
+const botonClave = document.createElement("button");
+botonClave.type = "button";
+botonClave.textContent = "Cambiar contraseña";
+botonClave.style.marginTop = "15px";
 
+elemento("salir").insertAdjacentElement("beforebegin", botonClave);
+
+botonClave.addEventListener("click", async function() {
+
+    const nueva = prompt("Ingresa tu nueva contraseña (mínimo 12 caracteres):");
+
+    if (nueva === null) return;
+
+    if (nueva.length < 12) {
+        alert("La contraseña debe tener al menos 12 caracteres.");
+        return;
+    }
+
+    const confirmar = prompt("Confirma tu nueva contraseña:");
+
+    if (nueva !== confirmar) {
+        alert("Las contraseñas no coinciden.");
+        return;
+    }
+
+    const { error } = await cliente.auth.updateUser({
+        password: nueva
+    });
+
+    if (error) {
+        alert("No se pudo cambiar la contraseña: " + error.message);
+        return;
+    }
+
+    alert("Contraseña actualizada correctamente.");
+});
 </script>
 
 </body>
