@@ -203,7 +203,7 @@ elemento("formulario").addEventListener("submit", async function(e) {
 
     elemento("mensaje").textContent = "";
 
-    if (!correo.endsWith("@ucen.cl")) {
+  if (!correo.endsWith("@ucen.cl") && !correo.endsWith("@ucentral.cl")) {
         elemento("mensaje").textContent =
             "Debes utilizar tu correo institucional.";
         return;
