@@ -6,6 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal de Calificaciones UCEN</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 * {
     box-sizing: border-box;
@@ -14,6 +16,7 @@ body {
     font-family: Arial, sans-serif;
     background: #eef2f7;
     margin: 0;
+    color: #333;
 }
 header {
     background: #003366;
@@ -22,47 +25,79 @@ header {
     text-align: center;
 }
 .contenedor {
-    max-width: 450px;
-    margin: 60px auto;
+    max-width: 650px;
+    margin: 40px auto;
     background: white;
-    padding: 35px;
+    padding: 30px;
     border-radius: 15px;
     box-shadow: 0 5px 20px #00000020;
 }
-h2 {
+h2, h3 {
     color: #003366;
-    text-align: center;
 }
-p {
-    color: #555;
-    line-height: 1.6;
+h2 {
     text-align: center;
 }
 input {
     width: 100%;
     padding: 14px;
-    margin: 15px 0;
+    margin: 10px 0 20px;
     border: 1px solid #ccc;
     border-radius: 8px;
     font-size: 16px;
 }
 button {
     width: 100%;
-    padding: 15px;
+    padding: 14px;
     background: #003366;
     color: white;
     border: none;
     border-radius: 8px;
     font-size: 16px;
+    cursor: pointer;
 }
 button:disabled {
     opacity: 0.6;
 }
+button:hover {
+    background: #005599;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+}
+th, td {
+    padding: 13px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+th {
+    background: #003366;
+    color: white;
+}
+.promedio {
+    background: #e3edf7;
+    font-weight: bold;
+}
+#mensaje {
+    color: #b91c1c;
+    text-align: center;
+}
+#salir {
+    background: #555;
+}
 footer {
     text-align: center;
     color: #777;
-    padding: 20px;
+    padding: 25px;
     font-size: 13px;
+}
+@media(max-width: 700px) {
+    .contenedor {
+        margin: 20px 12px;
+        padding: 20px;
+    }
 }
 </style>
 </head>
@@ -71,31 +106,188 @@ footer {
 
 <header>
     <h1>Portal de Calificaciones</h1>
-    Universidad Central de Chile
+    <p>Universidad Central de Chile</p>
 </header>
 
-<div class="contenedor">
+<div class="contenedor" id="login">
+
     <h2>Bienvenido estudiante</h2>
+    <p>Ingresa tus credenciales para consultar tus calificaciones.</p>
 
-    <p>Consulta tus calificaciones de manera individual.</p>
-
-    <label for="correo">Correo institucional</label>
-
-    <input
-        id="correo"
-        type="email"
+    <form id="formulario">
+        <label for="correo">Correo institucional</label>
+        <input type="email" id="correo"
         placeholder="estudiante@ucen.cl"
-        disabled
-    >
+        autocomplete="username" required>
 
-    <button disabled>Consultar calificaciones</button>
+        <label for="clave">Contraseña individual</label>
+        <input type="password" id="clave"
+        placeholder="Ingresa tu contraseña"
+        autocomplete="current-password" required>
 
-    <p>Portal en configuración. El acceso estará disponible cuando se habilite la autenticación segura.</p>
+        <button id="ingresar" type="submit">
+            Consultar calificaciones
+        </button>
+    </form>
+
+    <p id="mensaje" role="alert"></p>
+
+</div>
+
+<div class="contenedor" id="resultados" hidden>
+
+    <h2 id="nombre"></h2>
+    <p id="emailAlumno"></p>
+
+    <h3>Calificaciones de talleres</h3>
+
+    <table>
+        <tr><th>Evaluación</th><th>Nota</th></tr>
+        <tr><td>Taller 1</td><td id="t1"></td></tr>
+        <tr><td>Taller 2</td><td id="t2"></td></tr>
+        <tr><td>Taller 3</td><td id="t3"></td></tr>
+        <tr class="promedio">
+            <td>Promedio talleres</td>
+            <td id="pt"></td>
+        </tr>
+    </table>
+
+    <h3>Calificaciones de controles</h3>
+
+    <table>
+        <tr><th>Evaluación</th><th>Nota</th></tr>
+        <tr><td>Control 1</td><td id="c1"></td></tr>
+        <tr><td>Control 2</td><td id="c2"></td></tr>
+        <tr class="promedio">
+            <td>Promedio controles</td>
+            <td id="pc"></td>
+        </tr>
+    </table>
+
+    <button id="salir">Cerrar sesión</button>
+
 </div>
 
 <footer>
     Portal de consulta académica | 2026
 </footer>
+
+<script>
+
+const cliente = window.supabase.createClient(
+    "https://xfmdvlyanycaiqjaxmmf.supabase.co",
+    "sb_publishable_j8h0BeoyWvAV3ooU1h7nPg_75adICoN",
+    {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        }
+    }
+);
+
+const elemento = id => document.getElementById(id);
+
+function nota(valor) {
+    return valor === null || valor === undefined
+        ? "Pendiente"
+        : Number(valor).toFixed(1).replace(".", ",");
+}
+
+elemento("formulario").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const correo = elemento("correo").value.trim().toLowerCase();
+    const password = elemento("clave").value;
+
+    elemento("mensaje").textContent = "";
+
+    if (!correo.endsWith("@ucen.cl")) {
+        elemento("mensaje").textContent =
+            "Debes utilizar tu correo institucional.";
+        return;
+    }
+
+    elemento("ingresar").disabled = true;
+    elemento("ingresar").textContent = "Consultando...";
+
+    try {
+
+        const { error } = await cliente.auth.signInWithPassword({
+            email: correo,
+            password: password
+        });
+
+        elemento("clave").value = "";
+
+        if (error) {
+            elemento("mensaje").textContent =
+                "Correo o contraseña incorrectos, o acceso no disponible.";
+            return;
+        }
+
+        const { data, error: errorNotas } = await cliente
+            .from("calificaciones")
+            .select("nombre,correo,taller1,taller2,taller3,promedio_talleres,control1,control2,promedio_controles")
+            .eq("correo", correo)
+            .maybeSingle();
+
+        if (errorNotas || !data) {
+            await cliente.auth.signOut();
+            elemento("mensaje").textContent =
+                "No se encontraron calificaciones disponibles.";
+            return;
+        }
+
+        elemento("nombre").textContent = data.nombre;
+        elemento("emailAlumno").textContent = data.correo;
+
+        elemento("t1").textContent = nota(data.taller1);
+        elemento("t2").textContent = nota(data.taller2);
+        elemento("t3").textContent = nota(data.taller3);
+        elemento("pt").textContent = nota(data.promedio_talleres);
+
+        elemento("c1").textContent = nota(data.control1);
+        elemento("c2").textContent = nota(data.control2);
+        elemento("pc").textContent = nota(data.promedio_controles);
+
+        elemento("login").hidden = true;
+        elemento("resultados").hidden = false;
+
+    } catch (error) {
+
+        await cliente.auth.signOut().catch(() => {});
+        elemento("mensaje").textContent =
+            "No fue posible conectar con el servidor.";
+
+    } finally {
+
+        elemento("clave").value = "";
+        elemento("ingresar").disabled = false;
+        elemento("ingresar").textContent =
+            "Consultar calificaciones";
+
+    }
+
+});
+
+elemento("salir").addEventListener("click", async function() {
+
+    elemento("resultados").hidden = true;
+
+    ["nombre","emailAlumno","t1","t2","t3","pt","c1","c2","pc"]
+        .forEach(id => elemento(id).textContent = "");
+
+    try {
+        await cliente.auth.signOut();
+    } finally {
+        location.reload();
+    }
+
+});
+
+</script>
 
 </body>
 </html>
