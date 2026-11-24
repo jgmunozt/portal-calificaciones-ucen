@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Calificaciones UCEN</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    margin: 0;
+}
+header {
+    background: #003366;
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+.contenedor {
+    max-width: 450px;
+    margin: 60px auto;
+    background: white;
+    padding: 35px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px #00000020;
+}
+h2 {
+    color: #003366;
+    text-align: center;
+}
+p {
+    color: #555;
+    line-height: 1.6;
+    text-align: center;
+}
+input {
+    width: 100%;
+    padding: 14px;
+    margin: 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+button {
+    width: 100%;
+    padding: 15px;
+    background: #003366;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+}
+button:disabled {
+    opacity: 0.6;
+}
+footer {
+    text-align: center;
+    color: #777;
+    padding: 20px;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Portal de Calificaciones</h1>
+    Universidad Central de Chile
+</header>
+
+<div class="contenedor">
+    <h2>Bienvenido estudiante</h2>
+
+    <p>Consulta tus calificaciones de manera individual.</p>
+
+    <label for="correo">Correo institucional</label>
+
+    <input
+        id="correo"
+        type="email"
+        placeholder="estudiante@ucen.cl"
+        disabled
+    >
+
+    <button disabled>Consultar calificaciones</button>
+
+    <p>Portal en configuración. El acceso estará disponible cuando se habilite la autenticación segura.</p>
+</div>
+
+<footer>
+    Portal de consulta académica | 2026
+</footer>
+
+</body>
+</html>
